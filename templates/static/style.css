@@ -1,0 +1,17 @@
+/* style.css - small customizations */
+body {
+  background-color: #f7fafc;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+
+
+footer {
+  font-size: 0.9rem;
+}
+footer strong {
+  color: #ffc107; /* Gold highlight for your name */
+}
