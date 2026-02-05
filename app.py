@@ -357,15 +357,18 @@ def reset_password(token):
     conn = get_db_connection()
     cur = conn.cursor()
 
-
-    cur.execute(
-        "SELECT * FROM users WHERE reset_token=? AND reset_token_expiry > NOW()",
-        (token,)
-    )
+    cur.execute("SELECT * FROM users WHERE reset_token = ?", (token,))
     user = cur.fetchone()
 
     if not user:
         flash("Invalid or expired reset link.", "danger")
+        cur.close()
+        conn.close()
+        return redirect('/login')
+
+    expiry = datetime.fromisoformat(user['reset_token_expiry'])
+    if expiry < datetime.now():
+        flash("Reset link has expired.", "danger")
         cur.close()
         conn.close()
         return redirect('/login')
@@ -375,7 +378,7 @@ def reset_password(token):
         confirm = request.form['confirm_password']
 
         if not password or not confirm:
-            flash("All fields required.", "danger")
+            flash("All fields are required.", "danger")
             return redirect(request.url)
 
         if password != confirm:
@@ -384,21 +387,22 @@ def reset_password(token):
 
         hashed_pw = generate_password_hash(password)
 
-        cur.execute(
-            "UPDATE users SET password=?, reset_token=NULL, reset_token_expiry=NULL WHERE id=?",
-            (hashed_pw, user['id'])
-        )
+        cur.execute("""
+            UPDATE users
+            SET password = ?, reset_token = NULL, reset_token_expiry = NULL
+            WHERE id = ?
+        """, (hashed_pw, user['id']))
+
         conn.commit()
         cur.close()
         conn.close()
 
-        flash("Password reset successful. Login now.", "success")
+        flash("Password reset successful. Please login.", "success")
         return redirect('/login')
 
     cur.close()
     conn.close()
     return render_template('reset_password.html')
-
 #-----------search notes route------------
 
 
@@ -438,6 +442,6 @@ def search_notes():
 # --------------------
 # Run App
 # --------------------
-if __name__ == '_main_':
+if __name__ == '__main__':
     # debug=True for development only
     app.run(debug=True)
