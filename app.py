@@ -315,7 +315,7 @@ def forgot_password():
 
         # Generate secure token
         token = serializer.dumps(email, salt='reset-password')
-        expiry = datetime.now() + timedelta(minutes=15)
+        expiry = (datetime.now() + timedelta(minutes=15)).isoformat()
 
         cur.execute(
             "UPDATE users SET reset_token=?, reset_token_expiry=? WHERE email=?",
